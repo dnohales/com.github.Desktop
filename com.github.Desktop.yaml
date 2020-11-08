@@ -1,0 +1,86 @@
+app-id: com.github.Desktop
+base: org.electronjs.Electron2.BaseApp
+base-version: '20.08'
+runtime: org.freedesktop.Platform
+runtime-version: '20.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node12
+command: start-github-desktop
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=pulseaudio
+  - --share=network
+  - --device=all
+  - --filesystem=home
+  - --talk-name=org.freedesktop.Notifications
+  # - --env=XDG_CURRENT_DESKTOP=Unity
+  # - --talk-name=org.kde.StatusNotifierWatcher
+  # - --talk-name=com.canonical.AppMenu.Registrar
+modules:
+  - shared-modules/libsecret/libsecret.json
+
+  - name: yarn
+    buildsystem: simple
+    build-commands:
+      - 'cp -a * /app'
+    # Only used for building, so clean it up afterwards.
+    cleanup:
+      - '*'
+    sources:
+      - type: archive
+        url: https://github.com/yarnpkg/yarn/releases/download/v1.22.10/yarn-v1.22.10.tar.gz
+        sha256: 7e433d4a77e2c79e6a7ae4866782608a8e8bcad3ec6783580577c59538381a6e
+
+  - name: github-desktop
+    buildsystem: simple
+    build-options:
+      # Add the node bin directory & yarn directory.
+      append-path: '/usr/lib/sdk/node12/bin:/app/yarn/bin:/run/build/github-desktop/flatpak-node/chromedriver'
+      env:
+        # Sets the directory where Node is located so way npm won't download the headers.
+        npm_config_nodedir: '/usr/lib/sdk/node12'
+        # Set the Electron cache directory.
+        ELECTRON_CACHE: '/run/build/github-desktop/flatpak-node/electron-cache'
+        # Skip Electron related downloads
+        ELECTRON_SKIP_BINARY_DOWNLOAD: 'true'
+        CHROMEDRIVER_SKIP_DOWNLOAD: 'true'
+        # Use predownloaded node-sass binary
+        SASS_BINARY_PATH: '/run/build/github-desktop/flatpak-node/node-sass/linux-x64-72_binding.node'
+        # Use predownloaded dugite-native
+        DUGITE_CACHE_DIR: '/run/build/github-desktop/flatpak-node/tmp'
+    build-commands:
+      - 'HOME=$PWD yarn config --offline set yarn-offline-mirror $FLATPAK_BUILDER_BUILDDIR/flatpak-node/yarn-mirror'
+      - 'yarn --offline --verbose'
+      # Run electron-builder, passing the architecture arguments to it.
+      - '. flatpak-node/electron-builder-arch-args.sh; yarn run --offline build:prod $ELECTRON_BUILDER_ARCH_ARGS'
+      # Copy the resulting, unpacked directory to /app.
+      # (A glob is used because the directory name may contain the current arch.)
+      - 'cp -r dist/github-desktop-linux-* /app/github-desktop'
+      # Install the wrapper script to start it.
+      - 'install -Dm 755 start-github-desktop.sh /app/bin/start-github-desktop'
+    sources:
+      - type: git
+        url: https://github.com/shiftkey/desktop.git
+        commit: 236402dba329a5e83f03d1b1320479c7ef54af93
+
+      - type: patch
+        paths:
+          - patches/0001-flatpak-Use-yarn-directly-with-offline-flag-in-post-.patch
+          - patches/0002-flatpak-Set-electron-get-cacheRoot-to-flatpak-node-d.patch
+
+      - generated-sources.json
+
+      - type: file
+        url: https://github.com/sass/node-sass/releases/download/v4.13.1/linux-x64-72_binding.node
+        sha256: 958cccff6b88220a93c1a4c52c7260cbf2cfe9b259ba88e612b4347b14bc4936
+        dest: flatpak-node/node-sass
+        only-arches:
+          - x86_64
+
+      - type: script
+        dest-filename: start-github-desktop.sh
+        commands:
+          - '/app/github-desktop/github-desktop'
