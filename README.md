@@ -33,7 +33,7 @@ To update `desktop` repo to its latest commit and update the dependencies, you h
     ```yaml
     ...
           - type: git
-            url: https://github.com/shiftkey/    desktop.git
+            url: https://github.com/shiftkey/desktop.git
             commit: <put the commit here>
     ...
     ```
