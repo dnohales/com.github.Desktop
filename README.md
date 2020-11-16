@@ -8,7 +8,12 @@ It is based on [this fork](https://github.com/shiftkey/desktop) which contains e
 Installation
 ------------
 
-To build and install this Flatpak, you have to [install Flatpak, Flatpak builder and the Flathub repo](https://flatpak.org/setup/). Don't forget to initialize this repo submodules. Then run:
+To build and install this Flatpak, you have to [install Flatpak, Flatpak builder and the Flathub repo](https://flatpak.org/setup/). Don't forget to initialize this repo submodules.
+
+Clone this repository: `git clone https://github.com/dnohales/com.github.Desktop` and `cd` into the cloned repo.
+Clone two more repositories: `git clone https://github.com/flatpak/flatpak-builder-tools` and `git clone https://github.com/flathub/shared-modules`
+
+Then run:
 
 ```sh
 flatpak-builder build com.github.Desktop.yaml --repo=repo --install --force-clean --install-deps-from=flathub
