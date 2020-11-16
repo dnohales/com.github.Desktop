@@ -10,8 +10,9 @@ Installation
 
 To build and install this Flatpak, you have to [install Flatpak, Flatpak builder and the Flathub repo](https://flatpak.org/setup/). Don't forget to initialize this repo submodules.
 
-Clone this repository: `git clone https://github.com/dnohales/com.github.Desktop` and `cd` into the cloned repo.
-Clone two more repositories: `git clone https://github.com/flatpak/flatpak-builder-tools` and `git clone https://github.com/flathub/shared-modules`
+```
+git clone --recursive https://github.com/dnohales/com.github.Desktop
+```
 
 Then run:
 
